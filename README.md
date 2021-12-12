@@ -4,13 +4,20 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["Login"](https://github.com/gloryandgoore/tinyapp/blob/master/docs/Create%20URLs%20-%20TinyApp.png)
+Login
+!["Login"](https://github.com/gloryandgoore/tinyapp/blob/master/docs/Login%20page%20-%20TinyApp.png)
 
-!["Register"](#)
+Register
 
-!["Create New URLs"](#)
+!["Register"](https://github.com/gloryandgoore/tinyapp/blob/master/docs/Register%20-%20TinyApp.png)
 
-!["My Urls"](#)
+Create New URL
+
+!["Create New URLs"](https://github.com/gloryandgoore/tinyapp/blob/master/docs/Create%20URLs%20-%20TinyApp.png)
+
+My URLs
+
+!["My Urls"](https://github.com/gloryandgoore/tinyapp/blob/master/docs/My%20URLs%20-%20TinyApp.png)
 
 
 
