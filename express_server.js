@@ -4,9 +4,10 @@ const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session')
 const app = express();
 const bcrypt = require('bcryptjs');
-const {  generateRandomString, findDataByShortURL, getUserByEmail} = require("./helpers")
-const PORT = 8080;
 
+const {  generateRandomString, findDataByShortURL, getUserByEmail, userIdUrls, users,
+  urlDatabase } = require("./helpers")
+const PORT = 8080;
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
@@ -21,50 +22,6 @@ app.use(cookieSession({
 }))
 
 
-//database
-const urlDatabase = {
-  b6UTxQ: {
-      longURL: "https://www.tsn.ca",
-      userID: "aJ48lW"
-  },
-  i3BoGr: {
-      longURL: "https://www.google.ca",
-      userID: "aJ48lW"
-  }
-};
-
-const users = {
-  user1: {
-    id: "user1",
-    email: "user@example.com",
-    password: bcrypt.hashSync("123")
-  },
-  user2: {
-    id: "user2",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("321"),
-  },
-
-};
-
-
-
-const userIdUrls = (id, urlDatabase) => {
-  
-  const urlsToDisplay = {};
-  for(const shortURL in urlDatabase) {
-   
-    if(urlDatabase[shortURL].userID === id ) {
-     
-      urlsToDisplay[shortURL] = urlDatabase[shortURL];
-     
-    }
-  }
-  
-  return urlsToDisplay;
-};
-
-
 //middleware
 //use bodyParser to handle post request
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -76,6 +33,7 @@ app.get("/", (req, res) => {
   const user = users[req.session.user_id];
   return user ? res.redirect("/urls") : res.redirect("/login");
 });
+
 
 //urls
 app.get("/urls", (req, res) => {
@@ -94,82 +52,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//login
-app.get("/login", (req, res) => {
+app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
-  const templateVars = {
-    users,
-  };
-  res.render('login', templateVars);
-});
+  if (!user) return res.status(403).send("Blocked: not authorized.");
 
-
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-
-  if (!email || !password)
-    return res.status(400).send("Error, email/or password is blank!");
-
-  const user = getUserByEmail(email, users);
-
-  if (!user) return res.status(403).send("Error, user not found!");
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: user.id };
   
-  if (!bcrypt.compareSync(password, user.password)) {
-    return res.status(403).send("Error, password doesn't match our records");
-  }
-
-  const passwordMatch = bcrypt.compareSync(password, user.password);
-  if (!passwordMatch) {
-    return res.status(403).send("Error, try again")
-  }
-  
-  req.session.user_id = user.id;
-  res.redirect("/urls");
-});
-
-
-//logout
-app.post("/logout", (req, res) => {
-  req.session.user_id = null;
-  res.redirect("/urls");
-});
-
-//register
-app.get("/register", (req, res) => {
-  const user = users[req.session.user_id];
-  const templateVars = {
-    users,
-  };
-  res.render("register", templateVars);
-});
-
-//register
-app.post("/register/", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const userID = generateRandomString();
-  const exisitingUser = (getUserByEmail(email, users));
-  const hashedPassword = bcrypt.hashSync(password, 10); 
-
-  if (!email || !password) {
-    res.status(400).send("email and password should not be blank!");
-    return;
-  }
-
-  if (exisitingUser) {
-    return res.status(400).send("You've already registered. Please log in.");
-  } 
-
-  users[userID] = {
-    id: userID,
-    email: email,
-    password: hashedPassword,
-  };
-  req.session.user_id = userID;
-  
-  res.redirect("/urls");
-
+  res.redirect(`/urls/${shortURL}`);
 });
 
 
@@ -213,16 +103,6 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls", (req, res) => {
-  const user = users[req.session.user_id];
-  if (!user) return res.status(403).send("Blocked: not authorized.");
-
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: user.id };
-  
-  res.redirect(`/urls/${shortURL}`);
-});
-
 
 //delete user url
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -237,7 +117,6 @@ if (!userUrls[shortURL]){
 });
 
 
-
 //redirecting the server to longURL
 
 app.get("/u/:shortURL", (req, res) => {
@@ -250,6 +129,82 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 
+//login
+app.get("/login", (req, res) => {
+  const user = users[req.session.user_id];
+  const templateVars = {
+    users,
+  };
+  res.render('login', templateVars);
+});
+
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password)
+    return res.status(400).send("Error, email/or password is blank!");
+
+  const user = getUserByEmail(email, users);
+
+  if (!user) return res.status(403).send("Error, user not found!");
+  
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(403).send("Error, password doesn't match our records");
+  }
+
+  const passwordMatch = bcrypt.compareSync(password, user.password);
+  if (!passwordMatch) {
+    return res.status(403).send("Error, try again")
+  }
+  
+  req.session.user_id = user.id;
+  res.redirect("/urls");
+});
+
+//logout
+app.post("/logout", (req, res) => {
+  req.session.user_id = null;
+  res.redirect("/urls");
+});
+
+
+//register
+app.get("/register", (req, res) => {
+  const user = users[req.session.user_id];
+  const templateVars = {
+    users,
+  };
+  res.render("register", templateVars);
+});
+
+//register
+app.post("/register/", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const userID = generateRandomString();
+  const exisitingUser = (getUserByEmail(email, users));
+  const hashedPassword = bcrypt.hashSync(password, 10); 
+
+  if (!email || !password) {
+    res.status(400).send("email and password should not be blank!");
+    return;
+  }
+
+  if (exisitingUser) {
+    return res.status(400).send("You've already registered. Please log in.");
+  } 
+
+  users[userID] = {
+    id: userID,
+    email: email,
+    password: hashedPassword,
+  };
+  req.session.user_id = userID;
+  
+  res.redirect("/urls");
+
+});
 
 
 
