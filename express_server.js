@@ -10,22 +10,22 @@ const {
   findDataByShortURL,
   getUserByEmail,
   userIdUrls,
+} = require("./helpers");
+
+const {
   users,
   urlDatabase,
-} = require("./helpers");
-const PORT = 8080;
+} = require("./database");
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
+const PORT = 8080;
 
 app.use(
   cookieSession({
     name: "session",
-    keys: ["Tiny21"],
+    keys: ["Tiny21", "Tinyting"],
 
     // Cookie Options
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    // maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
 
@@ -55,7 +55,7 @@ app.get("/urls", (req, res) => {
   };
   res.render("urls_index", templateVars);
 });
-
+//if not logged in they are sent a message that they don't have authorization
 app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) return res.status(403).send("Blocked: not authorized.");
@@ -179,7 +179,7 @@ app.post("/register/", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userID = generateRandomString();
-  const exisitingUser = getUserByEmail(email, users);
+  const existingUser = getUserByEmail(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (!email || !password) {
@@ -187,7 +187,7 @@ app.post("/register/", (req, res) => {
     return;
   }
 
-  if (exisitingUser) {
+  if (existingUser) {
     return res.status(400).send("You've already registered. Please log in.");
   }
 
@@ -199,4 +199,8 @@ app.post("/register/", (req, res) => {
   req.session.user_id = userID;
 
   res.redirect("/urls");
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}`);
 });
