@@ -174,7 +174,7 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-//register
+//register user with hashed password
 app.post("/register/", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
