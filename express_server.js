@@ -7,7 +7,6 @@ const bcrypt = require("bcryptjs");
 
 const {
   generateRandomString,
-  findDataByShortURL,
   getUserByEmail,
   userIdUrls,
 } = require("./helpers");
@@ -48,6 +47,7 @@ app.get("/urls", (req, res) => {
 
   if (!user) {
     res.send("<h2><a href='/login'>Please login</a></h2>");
+    return;
   }
   const templateVars = {
     user,
@@ -117,11 +117,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //redirecting the server to longURL
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  if (!findDataByShortURL(shortURL)) {
-    return res.status(400).send("Invalid URL");
-  }
-
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(`${longURL}`);
 });

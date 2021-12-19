@@ -10,13 +10,6 @@ function generateRandomString() {
   return randomString.join("");
 }
 
-function findDataByShortURL(shortURL) {
-  for (const key in urlDatabase) {
-    if (key === shortURL) return shortURL;
-  }
-  return null;
-}
-
 const getUserByEmail = function (email, users) {
   for (const userId in users) {
     const user = users[userId];
@@ -40,7 +33,6 @@ const userIdUrls = (id, urlDatabase) => {
 
 module.exports = {
   generateRandomString,
-  findDataByShortURL,
   getUserByEmail,
   userIdUrls,
 };
