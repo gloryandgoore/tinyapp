@@ -98,6 +98,10 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const newLongURL = req.body.longURL;
   const shortURL = req.params.id;
+  const userUrls = userIdUrls(req.session.user_id, urlDatabase);
+ if (!userUrls[shortURL]) {
+  return res.status(403).send(“Cannot “edit);
+ }
   urlDatabase[shortURL].longURL = newLongURL;
   res.redirect("/urls");
 });
